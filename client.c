@@ -6,7 +6,7 @@
 /*   By: yde-rudd <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/19 18:30:55 by yde-rudd          #+#    #+#             */
-/*   Updated: 2024/09/28 19:44:46 by yde-rudd         ###   ########.fr       */
+/*   Updated: 2024/09/28 21:27:35 by yde-rudd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,7 @@ void	send_signal(int pid, char character)
 			kill(pid, SIGUSR2);
 		else
 			kill(pid, SIGUSR1);
-		usleep(3000);
+		usleep(100);
 		i--;
 	}
 }
