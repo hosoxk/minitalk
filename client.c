@@ -43,6 +43,11 @@ int	ft_atoi(const char *str)
 	return (result * sign);
 }
 
+void	acknowledge(int signal_nbr)
+{
+	(void)signal_nbr;
+}
+
 void	send_signal(int pid, char character)
 {
 	int		i;
@@ -54,10 +59,10 @@ void	send_signal(int pid, char character)
 	{
 		temp_char = character >> (i - 1);
 		if (temp_char % 2 == 0)
-			kill(pid, SIGUSR2);
-		else
 			kill(pid, SIGUSR1);
-		usleep(100);
+		else
+			kill(pid, SIGUSR2);
+		pause();
 		i--;
 	}
 }
@@ -74,6 +79,7 @@ int	main(int argc, char **argv)
 			" <server's pid> <message>\n", argv[0]);
 		return (1);
 	}
+	signal(SIGUSR1, acknowledge);
 	pid = ft_atoi(argv[1]);
 	msg = argv[2];
 	i = 0;
@@ -82,5 +88,6 @@ int	main(int argc, char **argv)
 		send_signal(pid, msg[i]);
 		i++;
 	}
+	send_signal(pid, '\0');
 	return (0);
 }

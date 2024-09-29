@@ -13,6 +13,14 @@
 #include <signal.h>
 #include "ft_printf/ft_printf.h"
 
+typedef struct s_data
+{
+	int	bits;
+	char	character;
+	int	client_pid;
+}	t_data;
+
+t_data	g_data;
 /*static void	print_values(int amount_of_bits, int signal_nbr)
 {
 	ft_printf("Bits read: %d\n", amount_of_bits);
@@ -22,29 +30,49 @@
 		ft_printf("Received SIGUSR2\n");
 }*/
 
-void	set_signal_handlers(int signal_nbr)
+void	set_data(void)
 {
-	static int				bits;
-	static unsigned char	current_char;
+	g_data.bits = 0;
+	g_data.character = 0;
+	g_data.client_pid = 0;
+}
 
-	current_char <<= 1;
-	if (signal_nbr == SIGUSR1)
-		current_char |= 1;
-	bits++;
-	if (bits == 8)
+void	handler(int signal_nbr, siginfo_t *info, void *ucontext)
+{
+	(void)ucontext;
+
+	if (g_data.client_pid != info->si_pid)
 	{
-		ft_printf("%c", current_char);
-		bits = 0;
-		current_char = 0;
+		set_data();
+		g_data.client_pid = info->si_pid;
 	}
-//	print_values(bits, signal_nbr);
+	g_data.character <<= 1;
+	if (signal_nbr == SIGUSR2)
+		g_data.character |= 1;
+	g_data.bits++;
+	if (g_data.bits == 8)
+	{
+		ft_printf("%c", g_data.character);
+		set_data();
+	}
+	kill(info->si_pid, SIGUSR1);
 }
 
 int	main(void)
 {
+	struct sigaction	sa;
+
 	ft_printf("Server's pid: %d\n", getpid());
-	signal(SIGUSR1, set_signal_handlers);
-	signal(SIGUSR2, set_signal_handlers);
+	set_data();
+
+	sa.sa_sigaction = &handler;
+	sa.sa_flags = SA_SIGINFO;
+	sigemptyset(&sa.sa_mask);
+	sigaddset(&sa.sa_mask, SIGUSR1);
+	sigaddset(&sa.sa_mask, SIGUSR2);
+
+	sigaction(SIGUSR1, &sa, NULL);
+	sigaction(SIGUSR2, &sa, NULL);
 	while (1)
 		pause();
 	return (0);
