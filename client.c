@@ -63,6 +63,7 @@ void	send_signal(int pid, char character)
 		else
 			kill(pid, SIGUSR2);
 		pause();
+		usleep(100);
 		i--;
 	}
 }
