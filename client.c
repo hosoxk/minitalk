@@ -6,7 +6,7 @@
 /*   By: yde-rudd <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/19 18:30:55 by yde-rudd          #+#    #+#             */
-/*   Updated: 2024/09/28 21:27:35 by yde-rudd         ###   ########.fr       */
+/*   Updated: 2024/09/30 17:28:16 by yde-rudd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,18 +48,19 @@ void	send_signal(int pid, char character)
 	int		i;
 	char	temp_char;
 
-	i = 8;
+	i = 0;
 	temp_char = character;
-	while (i > 0)
+	usleep(50);
+	while (i < 8)
 	{
-		temp_char = character >> (i - 1);
-		if (temp_char % 2 == 0)
-			kill(pid, SIGUSR2);
-		else
+		if (temp_char & (0x01 << i))
 			kill(pid, SIGUSR1);
-		usleep(100);
-		i--;
+		else
+			kill(pid, SIGUSR2);
+		i++;
+		usleep(50);
 	}
+	write(1, &temp_char, 1);
 }
 
 int	main(int argc, char **argv)
@@ -82,5 +83,6 @@ int	main(int argc, char **argv)
 		send_signal(pid, msg[i]);
 		i++;
 	}
+	send_signal(pid, '\0');
 	return (0);
 }
