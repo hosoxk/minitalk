@@ -6,7 +6,7 @@
 /*   By: yde-rudd <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/19 18:30:55 by yde-rudd          #+#    #+#             */
-/*   Updated: 2024/09/30 17:28:16 by yde-rudd         ###   ########.fr       */
+/*   Updated: 2024/10/04 16:37:15 by yde-rudd         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 //for kill
 #include <signal.h>
 #include "./ft_printf/ft_printf.h"
+
+volatile int	g_ack_received = 0;
 
 int	ft_atoi(const char *str)
 {
@@ -43,24 +45,35 @@ int	ft_atoi(const char *str)
 	return (result * sign);
 }
 
+void	ack_handler(int signal_nbr)
+{
+	(void)signal_nbr;
+	g_ack_received = 1;
+}
+
 void	send_signal(int pid, char character)
 {
-	int		i;
-	char	temp_char;
+	int	i;
 
 	i = 0;
-	temp_char = character;
-	usleep(50);
 	while (i < 8)
 	{
-		if (temp_char & (0x01 << i))
-			kill(pid, SIGUSR1);
+		g_ack_received = 0;
+		if (character & (0x01 << i))
+		{
+			if (kill(pid, SIGUSR1) == -1)
+				ft_printf("Error sending SIGUSR1\n");
+		}
 		else
-			kill(pid, SIGUSR2);
+		{
+			if (kill(pid, SIGUSR2) == -1)
+				ft_printf("Error sending SIGUSR2\n");
+		}
+		usleep(100);
+		while (!g_ack_received)
+			;
 		i++;
-		usleep(50);
 	}
-	write(1, &temp_char, 1);
 }
 
 int	main(int argc, char **argv)
@@ -77,6 +90,7 @@ int	main(int argc, char **argv)
 	}
 	pid = ft_atoi(argv[1]);
 	msg = argv[2];
+	signal(SIGUSR1, ack_handler);
 	i = 0;
 	while (msg[i] != '\0')
 	{
